@@ -28,17 +28,19 @@ namespace MaxMix.ViewModels
         public MainViewModel()
         {
             _serializationService = new CobsSerializationService();
+
+            // These ids need to match on the firmware side.
             _serializationService.RegisterType<MessageHandShakeRequest>(0);
             _serializationService.RegisterType<MessageHandShakeResponse>(1);
             _serializationService.RegisterType<MessageAddSession>(2);
             _serializationService.RegisterType<MessageRemoveSession>(3);
             _serializationService.RegisterType<MessageUpdateVolumeSession>(4);
             _serializationService.RegisterType<MessageSettings>(5);
+            _serializationService.RegisterType<MessageConfirm>(6);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
 
-            // TODO: pass in SystemSounds
             _audioSessionService = new AudioSessionService(_settingsViewModel.SystemSounds);
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;

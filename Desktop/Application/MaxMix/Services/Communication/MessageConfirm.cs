@@ -6,28 +6,34 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageHandShakeRequest : MessageBase
+    internal class MessageConfirm : MessageBase
     {
         #region Constructor
-        public MessageHandShakeRequest() : base(){ }
+        public MessageConfirm() : base() { }
+
+        public MessageConfirm(int msgId)
+            :base()
+        {
+            _msgId = msgId;
+        }
         #endregion
 
         #region Consts
         #endregion
 
         #region Fields
+        private int _msgId;
         #endregion
 
         #region Properties
+        public int MsgId => _msgId;
         #endregion
 
         #region Public Methods
-        public override byte[] GetBytes()
+        public override bool SetBytes(byte[] bytes)
         {
-            var result = new List<byte>();
-            result.Add(Convert.ToByte(MessageId));
-            result.Add(Convert.ToByte(252));
-            return result.ToArray();
+            _msgId = Convert.ToInt16(bytes[0]);
+            return true;
         }
         #endregion
     }

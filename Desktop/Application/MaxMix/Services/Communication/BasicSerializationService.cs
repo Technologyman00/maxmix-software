@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace MaxMix.Services.Communication
 {
     // TODO: Delete, not in use.
-    internal class SerializationService : ISerializationService
+    internal class BasicSerializationService : ISerializationService
     {
         #region Constructor
-        public SerializationService()
+        public BasicSerializationService()
         {
             _typeMap = new Dictionary<int, Type>();
         }

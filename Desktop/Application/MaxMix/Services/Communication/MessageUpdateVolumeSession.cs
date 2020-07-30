@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageUpdateVolumeSession : IMessage
+    internal class MessageUpdateVolumeSession : MessageBase
     {
         #region Constructor
-        public MessageUpdateVolumeSession() { }
+        public MessageUpdateVolumeSession() :base() { }
 
         public MessageUpdateVolumeSession(int id, int volume, bool isMuted)
+            :base()
         {
             _id = id;
             _volume = volume;
@@ -49,10 +50,11 @@ namespace MaxMix.Services.Communication
         * ---------------------------------------
         */
 
-        public byte[] GetBytes()
+        public override byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
 
+            result.Add(Convert.ToByte(MessageId));
             result.AddRange(BitConverter.GetBytes(Id));
             result.Add(Convert.ToByte(Volume));
             result.Add(Convert.ToByte(IsMuted));
@@ -60,7 +62,7 @@ namespace MaxMix.Services.Communication
             return result.ToArray();
         }
 
-        public bool SetBytes(byte[] bytes)
+        public override bool SetBytes(byte[] bytes)
         {
             var idBytes = bytes.Take(4).Reverse().ToArray();
             _id = BitConverter.ToInt32(idBytes, 0);

@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageAddSession : IMessage
+    internal class MessageAddSession : MessageBase
     {
         #region Constructor
+        public MessageAddSession() : base() { }
         public MessageAddSession(int id, string name, int volume, bool isMuted)
+            : base()
         {
             _id = id;
             _name = name;
@@ -56,7 +58,6 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Public Methods
-
         /*
         * ---------------------------------------
         * CHUNK        TYPE        SIZE (BYTES)
@@ -69,7 +70,7 @@ namespace MaxMix.Services.Communication
         *                          42
         */
 
-        public byte[] GetBytes()
+        public override byte[] GetBytes()
         {
             var result = new List<byte>();           
 
@@ -79,11 +80,6 @@ namespace MaxMix.Services.Communication
             result.Add(Convert.ToByte(IsMuted));
 
             return result.ToArray();
-        }
-
-        public bool SetBytes(byte[] bytes)
-        {
-            return true;
         }
         #endregion
     }

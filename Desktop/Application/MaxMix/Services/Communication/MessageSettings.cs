@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageSettings : IMessage
+    internal class MessageSettings : MessageBase
     {
         #region Constructor
+        public MessageSettings() :base() { }
         public MessageSettings(bool displayNewSession, bool sleepWhenInactive, int sleepAfterSeconds, bool continuousScroll)
+            : base()
         {
             _displayNewSession = displayNewSession;
             _sleepWhenInactive = sleepWhenInactive;
@@ -51,21 +54,17 @@ namespace MaxMix.Services.Communication
         * ---------------------------------------------------
         */
 
-        public byte[] GetBytes()
+        public override byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
 
+            result.Add(Convert.ToByte(MessageId));
             result.Add(Convert.ToByte(DisplayNewSession));
             result.Add(Convert.ToByte(SleepWhenInactive));
             result.Add(Convert.ToByte(SleepAfterSeconds));
             result.Add(Convert.ToByte(ContinuousScroll));
 
             return result.ToArray();
-        }
-
-        public bool SetBytes(byte[] bytes)
-        {
-            throw new NotImplementedException("Should never be called");
         }
         #endregion
     }

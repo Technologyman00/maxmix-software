@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageRemoveSession : IMessage
+    internal class MessageRemoveSession : MessageBase
     {
         #region Constructor
+        public MessageRemoveSession() : base() { }
         public MessageRemoveSession(int id)
+            : base()
         {
             _id = id;
         }
@@ -30,7 +32,6 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Public Methods
-
         /*
         * ---------------------------------------
         * CHUNK        TYPE        SIZE (BYTES)
@@ -39,14 +40,12 @@ namespace MaxMix.Services.Communication
         * ---------------------------------------
         */
 
-        public byte[] GetBytes()
+        public override byte[] GetBytes()
         {
-            return BitConverter.GetBytes(Id);
-        }
-
-        public bool SetBytes(byte[] bytes)
-        {
-            throw new NotImplementedException("Should never be called");
+            var result = new List<byte>();
+            result.Add(Convert.ToByte(MessageId));
+            result.Add(Convert.ToByte(Id));
+            return result.ToArray();
         }
         #endregion
     }

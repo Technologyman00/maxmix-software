@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageHandShakeResponse : IMessage
+    internal class MessageHandShakeResponse : MessageBase
     {
         #region Constructor
-        public MessageHandShakeResponse() { }
+        public MessageHandShakeResponse() :base() { }
         #endregion
 
         #region Consts
@@ -22,12 +22,7 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Public Methods
-        public byte[] GetBytes()
-        {
-            throw new NotImplementedException("Should never be called");
-        }
-
-        public bool SetBytes(byte[] bytes)
+        public override bool SetBytes(byte[] bytes)
         {
             return true;
         }
