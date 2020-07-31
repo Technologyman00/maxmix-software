@@ -25,7 +25,6 @@ namespace MaxMix.Services.Communication
         public override byte[] GetBytes()
         {
             var result = new List<byte>();
-            result.Add(Convert.ToByte(MessageId));
             result.Add(Convert.ToByte(252));
             return result.ToArray();
         }

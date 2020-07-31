@@ -11,7 +11,7 @@ namespace MaxMix.Services.Communication
         #region Constructor
         public MessageBase()
         {
-            _msgId = new Random().Next();
+            MessageId = new Random().Next(255);
         }
         #endregion
 
@@ -19,11 +19,14 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
-        private int _msgId;
         #endregion
 
         #region Properties
-        public int MessageId => _msgId;
+        public int MessageId
+        {
+            get;
+            protected set;
+        }
 
         public virtual byte[] GetBytes()
         {

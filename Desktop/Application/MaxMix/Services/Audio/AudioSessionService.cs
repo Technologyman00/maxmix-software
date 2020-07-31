@@ -110,7 +110,9 @@ namespace MaxMix.Services.Audio
             using (var enumerator = new MMDeviceEnumerator())
             {
                 var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);
-                _devices.Add(device.ID, device);
+                if(!_devices.ContainsKey(device.ID))
+                    _devices.Add(device.ID, device);
+
                 OnSessionCreated(device);
 
                 device.SessionCreated += OnSessionCreated;

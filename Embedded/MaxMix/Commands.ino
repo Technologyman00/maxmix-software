@@ -23,6 +23,16 @@ void SendHandshakeCommand(uint8_t* rawBuffer, uint8_t* packageBuffer)
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+void SendConfirmCommand(uint8_t msgId, uint8_t* rawBuffer, uint8_t* packageBuffer)
+{
+    rawBuffer[0] = MSG_COMMAND_CONFIRM;
+    rawBuffer[1] = msgId;
+    uint8_t encodeSize =  EncodePackage(rawBuffer, 2, packageBuffer);
+    Serial.write(packageBuffer, encodeSize);
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
 {
   rawBuffer[0] = MSG_COMMAND_UPDATE_VOLUME;

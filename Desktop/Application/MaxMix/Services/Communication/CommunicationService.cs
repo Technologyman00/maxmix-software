@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,22 +21,34 @@ namespace MaxMix.Services.Communication
         {
             _serializationService = serializationService;
             _synchronizationContext = SynchronizationContext.Current;
-            _buffer = new List<byte>();
+            
+            _sendQueue = new ConcurrentQueue<IMessage>();
+            _receiveBuffer = new List<byte>();
         }
         #endregion
 
         #region Consts
         private const int _checkPortInterval = 500;
+        private const int _sendConfirmInterval = 10;
         private const int _timeout = 1000;
+        private const int _sendQueueMax = 100;
+        private const int _sendRetryMax = 3;
         #endregion
 
         #region Fields
         private readonly ISerializationService _serializationService;
-        private readonly IList<byte> _buffer;
+        private readonly ConcurrentQueue<IMessage> _sendQueue;
+        private readonly IList<byte> _receiveBuffer;
+        private readonly object _lastSentLock = new object();
+
 
         private string _portName;
         private int _baudRate;
         private SerialPort _serialPort;
+        
+        private IMessage _lastSent;
+        private Thread _sendThread;
+        private bool _isSend;
 
         private Thread _portStateThread;
         private bool _isCheckPortState;
@@ -72,6 +86,10 @@ namespace MaxMix.Services.Communication
             _isCheckPortState = true;
             _portStateThread = new Thread(() => CheckPortState());
             _portStateThread.Start();
+
+            _isSend = true;
+            _sendThread = new Thread(() => Send());
+            _sendThread.Start();
         }
 
         /// <summary>
@@ -80,7 +98,10 @@ namespace MaxMix.Services.Communication
         public void Stop()
         {
             _isCheckPortState = false;
+            _isSend = false;
+
             _portStateThread?.Join();
+            _sendThread?.Join();
 
             Disconnect();
         }
@@ -91,16 +112,10 @@ namespace MaxMix.Services.Communication
         /// <param name="message">The message object to send.</param>
         public void Send(IMessage message)
         {
-            try
-            {
-                var message_ = _serializationService.Serialize(message);
-                _serialPort.Write(message_, 0, message_.Length);
-                Thread.Sleep(50);
-            }
-            catch(Exception e)
-            {
-                RaiseError(e.Message);
-            }
+            if(_sendQueue.Count < _sendQueueMax)
+                _sendQueue.Enqueue(message);
+            else
+                RaiseError("Send queue full.");
         }
         #endregion
 
@@ -114,7 +129,65 @@ namespace MaxMix.Services.Communication
                     RaiseError("Port closed.");
                     return;
                 }
+
                 Thread.Sleep(_checkPortInterval);
+            }
+        }
+
+        private void Send()
+        {
+            while (_isSend)
+            {
+                if (_lastSent != null)
+                {
+                    Thread.Sleep(_sendConfirmInterval);
+                    continue;
+                }
+
+                lock (_lastSentLock)
+                {
+                    _sendQueue.TryDequeue(out _lastSent);
+                    if (_lastSent == null)
+                        continue;
+                }
+
+                try
+                {
+                    byte[] bytes;
+                    lock(_lastSentLock)
+                        bytes = _serializationService.Serialize(_lastSent);
+                    _serialPort.Write(bytes, 0, bytes.Length);
+                }
+                catch (Exception e)
+                {
+                    RaiseError(e.Message);
+                }
+            }
+        }
+
+        private void Receive()
+        {
+            while (_serialPort.BytesToRead > 0)
+            {
+                byte received = (byte)_serialPort.ReadByte();
+                _receiveBuffer.Add(received);
+
+                if (received == _serializationService.Delimiter)
+                {
+                    var message = _serializationService.Deserialize(_receiveBuffer.ToArray());
+                    if (message != null)
+                    {
+                        if (message.MessageId == _lastSent.MessageId)
+                            lock(_lastSentLock)
+                                _lastSent = null;
+
+                        RaiseMessageReceived(message);
+                    }
+                    else
+                        RaiseError("Deserialization error.");
+
+                    _receiveBuffer.Clear();
+                }
             }
         }
 
@@ -141,26 +214,6 @@ namespace MaxMix.Services.Communication
                 _serialPort.Dispose();
             }
             catch { }
-        }
-
-        private void Receive()
-        {
-            while (_serialPort.BytesToRead > 0)
-            {
-                byte received = (byte)_serialPort.ReadByte();
-                _buffer.Add(received);
-
-                if (received == _serializationService.Delimiter)
-                {
-                   var message = _serializationService.Deserialize(_buffer.ToArray());
-                    if (message != null)
-                        RaiseMessageReceived(message);
-                    else
-                        RaiseError("Deserialization error.");
-
-                    _buffer.Clear();
-                }
-            }
         }
         #endregion
 

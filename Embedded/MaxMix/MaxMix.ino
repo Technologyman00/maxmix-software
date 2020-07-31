@@ -178,6 +178,7 @@ void ClearSend()
 bool ProcessPackage()
 {
   uint8_t command = GetCommandFromPackage(decodeBuffer);
+  uint8_t messageId = GetMessageIdFromPackage(decodeBuffer);
   
   if(command == MSG_COMMAND_HS_REQUEST)
   {
@@ -185,11 +186,12 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_ADD)
   {
+    SendConfirmCommand(messageId, sendBuffer, encodeBuffer);
+
     // Check for buffer overflow first.
     if(itemCount == ITEM_BUFFER_SIZE)
       return false;
 
-    // Check if item exists, add or update accordingly.
     uint32_t id = GetIdFromPackage(decodeBuffer);
     int8_t index = FindItem(id);
     if(index == -1)
@@ -212,6 +214,8 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_REMOVE)
   {
+    SendConfirmCommand(messageId, sendBuffer, encodeBuffer);
+
     // Check if there are any existing items first.
     if(itemCount == 0)  
       return false;
@@ -240,6 +244,8 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_UPDATE_VOLUME)
   {
+    SendConfirmCommand(messageId, sendBuffer, encodeBuffer);
+
     // Check that the item exists.
     uint32_t id = GetIdFromPackage(decodeBuffer);  
     int8_t index = FindItem(id);
@@ -254,6 +260,7 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
+    SendConfirmCommand(messageId, sendBuffer, encodeBuffer);
     UpdateSettingsCommand(decodeBuffer, &settings);
     return true;
   }
